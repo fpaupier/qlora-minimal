@@ -2,23 +2,21 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 import torch
 
-base_path="models/Mistral-7B-v0.1"  # input: base model
-adapter_path="out/checkpoint-606"       # input: adapters
+base_model_id= "mistralai/Mistral-7B-v0.1"  # input: base model
+adapter_path="out/checkpoint-663"       # input: adapters
 save_to="models/Mistral-7B-finetuned"       # out: merged model ready for inference
 
 base_model = AutoModelForCausalLM.from_pretrained(
-    base_path,
+    base_model_id,
     return_dict=True,
     torch_dtype=torch.bfloat16,
     device_map="auto",
 )
 
-tokenizer = AutoTokenizer.from_pretrained(base_path)
+tokenizer = AutoTokenizer.from_pretrained(base_model_id)
 
 # Add/set tokens same tokens to base model before merging, like we did before starting training https://github.com/geronimi73/qlora-minimal/blob/main/qlora.py#L27  
 tokenizer.pad_token = "</s>"
-tokenizer.add_tokens(["<|im_start|>"])
-tokenizer.add_special_tokens(dict(eos_token="<|im_end|>"))
 base_model.resize_token_embeddings(len(tokenizer))
 base_model.config.eos_token_id = tokenizer.eos_token_id
 
